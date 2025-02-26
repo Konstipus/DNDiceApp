@@ -1,10 +1,8 @@
 package com.example.dndiceapp
 
-import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -17,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -27,9 +27,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,13 +57,16 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun DiceApp(){
     //list of dice added for rolling
-    var diceList by remember{ mutableStateOf(listOf<Byte>()) }
+    var diceList by remember{mutableStateOf(listOf<Int>())}
+    var dieButtonList by remember {mutableStateOf(listOf<Int>())}
+
     //this is the result of separate dices' roll
-    var rollResult by remember{mutableStateOf<List<Byte>>(emptyList())}
-    var total by remember{ mutableStateOf<Byte>(0)}
+    var rollResult by remember{mutableStateOf<List<Int>>(emptyList())}
+    var total by remember{ mutableStateOf<Int>(0)}
 
     /*TODO:
         1. Turn the rolled dice into buttons, so they can be removed from the added dice list
+           XX done XX
         2. Make the lists visually appealing more. Figure out how to remove the  [ ] brackets
         3. Holding button makes the added die to be rolled with advantage.
         4. Coloring and background
@@ -71,22 +76,32 @@ fun DiceApp(){
         var totalRollSum = 0
         for (rolledDie in diceList){
             //define each die
-            val dice = Die(rolledDie)
-            val rolledDieValue = dice.roll()
+            val roll = Die(rolledDie.toByte())
+            val rolledDieValue = roll.roll()
             totalRollSum += rolledDieValue
-            //rollResult needs to be replaced because separate inddex update in lists cannot be 'remembered'
+            //rollResult needs to be replaced because separate index update in lists cannot be 'remembered'
             rollResult = rollResult + rolledDieValue
 
         }
-        total = totalRollSum.toByte()
+        total = totalRollSum.toInt()
 
 
     }
-    fun addDie(dieSides:Byte){
+
+
+
+    /* TODO:
+    *   figure out how to call this addDieButton via add die*/
+
+    fun addDieButton(dieSides:Int){
+        dieButtonList = dieButtonList + dieSides
+
+    }
+
+    fun addDie(dieSides:Int){
         diceList = diceList + dieSides
+        addDieButton(dieSides)
     }
-
-
 
 
 
@@ -115,6 +130,42 @@ fun DiceApp(){
             Text(text = "Totalling in: \n $total",
                 fontSize = 25.sp,
                 textAlign = TextAlign.Center)
+
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        /*lambda function: Anonymous function that needs not to be defined with 'fun' etc.
+       forEachIndexed expects a function to run in curly thingies, instead we pass lambda
+       to only store local variables 'index' and 'dieSides' for each of the buttons
+
+      IMPORTANT: "->" separates list of parameters from the function body
+
+        */
+        Row{
+            dieButtonList.forEachIndexed{ index , dieSides ->
+                Button(onClick = { dieButtonList = dieButtonList - dieSides
+                                    diceList = diceList - dieSides },
+                    modifier = Modifier
+                        .size(40.dp)
+                        ,
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(1.dp)
+
+
+
+
+                       ){
+                    Text(text = "d$dieSides",
+                        fontSize = 16.sp,
+                        maxLines = 1,
+                        textAlign = TextAlign.Center,
+
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                }
+            }
+
 
         }
         Spacer(modifier = Modifier.height(160.dp))
@@ -173,7 +224,9 @@ fun DiceApp(){
             Button(onClick = {
                 rollResult = emptyList()
                 rollDice()},
-                modifier = Modifier.size(100.dp).requiredWidth(250.dp),
+                modifier = Modifier
+                    .size(100.dp)
+                    .requiredWidth(250.dp),
                 contentPadding = PaddingValues(0.dp)
 
                 ) {
@@ -189,7 +242,18 @@ fun DiceApp(){
         }
 
     }
+@Composable
+fun dieButton(dieSides: Int): @Composable () -> Unit {
+    return{
+    Button(
+        onClick = {/*TODO:*/ }
 
+    ){
+        Text(text = "d$dieSides")
+    }
+
+    }
+}
 
 
 @Preview(showBackground = true)
